@@ -372,6 +372,8 @@ struct GeneralSettingData
     bool portable_mode{ false };        //便携模式，如果为true，则程序所有数据都保存到exe所在目录下，否则保存到Appdata\Romaing目录下
     int monitor_time_span{ 1000 };    //监控的时间间隔
 
+    std::wstring gpu_device_id;         // Persistent PnP ID; empty selects automatically.
+    std::wstring gpu_device_name;       // Last display name, also used for a disconnected GPU.
     std::wstring hard_disk_name;        //要监控的硬盘名称
     std::wstring cpu_core_name;         //要监控的CPU核心的名称
 

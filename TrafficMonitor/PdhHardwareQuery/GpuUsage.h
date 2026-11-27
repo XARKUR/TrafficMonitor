@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "PdhQuery.h"
+#include "GpuAdapters.h"
 
 // GPU利用率监控类
 class CPdhGPUUsage : public CPdhQuery
@@ -11,6 +12,10 @@ public:
     // 获取GPU利用率（0-100）
     // 返回值: true=成功, false=失败
     // 注意：首次调用通常返回false（PDH需要预热），建议间隔200ms以上再次调用
-    bool GetGpuUsage(/*out*/ int& usage);
+    bool GetGpuUsage(int& usage, const std::wstring& selected_device, std::wstring& resolved_device);
+
+private:
+    std::vector<GpuAdapter> m_adapters;
+    DWORD m_last_enumeration{};
 
 };

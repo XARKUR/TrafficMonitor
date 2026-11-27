@@ -753,7 +753,10 @@ void CTrafficMonitorDlg::ApplySettings(COptionsDlg& optionsDlg)
 
     theApp.m_main_wnd_data = optionsDlg.m_tab1_dlg.m_data;
     theApp.m_taskbar_data = optionsDlg.m_tab2_dlg.m_data;
-    theApp.m_general_data = optionsDlg.m_tab3_dlg.m_data;
+    {
+        CSingleLock sync(&theApp.m_minitor_lib_critical, TRUE);
+        theApp.m_general_data = optionsDlg.m_tab3_dlg.m_data;
+    }
     theApp.SendSettingsToPlugin();
 
     CGeneralSettingsDlg::CheckTaskbarDisplayItem();
@@ -1371,14 +1374,16 @@ void CTrafficMonitorDlg::DoMonitorAcquisition()
         cpu_freq_acquired = true;
     //}
 
-    //获取GPU利用率
-    if (lite_version /*|| is_arm64ec*/ || !theApp.m_general_data.IsHardwareEnable(HI_GPU))
+    // Use one selected adapter for both PDH utilization and hardware sensors.
+    std::wstring selected_gpu_device;
     {
-        if (m_gpu_usage_helper.GetGpuUsage(theApp.m_gpu_usage))
-            gpu_usage_acquired = true;
-        else
-            theApp.m_gpu_usage = -1;
+        CSingleLock sync(&theApp.m_minitor_lib_critical, TRUE);
+        selected_gpu_device = theApp.m_general_data.gpu_device_id;
     }
+    std::wstring resolved_gpu_device;
+    theApp.m_gpu_usage = -1;
+    if (m_gpu_usage_helper.GetGpuUsage(theApp.m_gpu_usage, selected_gpu_device, resolved_gpu_device))
+        gpu_usage_acquired = true;
 
     //获取硬盘利用率
     if (lite_version /*|| is_arm64ec*/ || !theApp.m_general_data.IsHardwareEnable(HI_HDD))
@@ -1427,6 +1432,7 @@ void CTrafficMonitorDlg::DoMonitorAcquisition()
         auto getHardwareInfo = [&]() {
             __try
             {
+                theApp.m_pMonitor->SetGpuDevice(resolved_gpu_device);
                 theApp.m_pMonitor->GetHardwareInfo();
             }
             __except (EXCEPTION_EXECUTE_HANDLER)

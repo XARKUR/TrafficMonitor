@@ -25,6 +25,7 @@ namespace OpenHardwareMonitorApi
         virtual void SetGpuEnable(bool enable) = 0;
         virtual void SetHddEnable(bool enable) = 0;
         virtual void SetMainboardEnable(bool enable) = 0;
+        virtual void SetGpuDevice(const std::wstring& device_id) = 0;
     };
 
     OPENHARDWAREMONITOR_API std::shared_ptr<IOpenHardwareMonitor> CreateInstance();

@@ -85,6 +85,9 @@ bool CPdhQuery::QueryValues(std::vector<CounterValueItem>& values)
                 // Loop through the array and print the instance name and counter value.
                 for (DWORD i = 0; i < dwItemCount; i++)
                 {
+                    if (pItems[i].FmtValue.CStatus != PDH_CSTATUS_VALID_DATA &&
+                        pItems[i].FmtValue.CStatus != PDH_CSTATUS_NEW_DATA)
+                        continue;
                     CounterValueItem value_item;
                     value_item.name = pItems[i].szName;
                     value_item.value = pItems[i].FmtValue.doubleValue;

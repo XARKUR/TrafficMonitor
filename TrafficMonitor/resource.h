@@ -463,13 +463,16 @@
 #define ID_PLUGIN_COMMAND_MAX           33664
 #define ID_RESTORE_DEFAULT              33665
 
+#define IDC_SELECT_GPU_STATIC           1220
+#define IDC_SELECT_GPU_COMBO            1221
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        349
 #define _APS_NEXT_COMMAND_VALUE         33666
-#define _APS_NEXT_CONTROL_VALUE         1220
+#define _APS_NEXT_CONTROL_VALUE         1222
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

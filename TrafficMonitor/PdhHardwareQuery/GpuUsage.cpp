@@ -1,51 +1,28 @@
 ﻿#include "stdafx.h"
 #include "GpuUsage.h"
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// CPdhGPUUsage 实现
-///////////////////////////////////////////////////////////////////////////////////////////
 CPdhGPUUsage::CPdhGPUUsage()
-: CPdhQuery(_T("\\GPU Engine(*)\\Utilization Percentage"))
+    : CPdhQuery(_T("\\GPU Engine(*)\\Utilization Percentage"))
 {
 }
 
-CPdhGPUUsage::~CPdhGPUUsage()
-{
-}
+CPdhGPUUsage::~CPdhGPUUsage() = default;
 
-bool CPdhGPUUsage::GetGpuUsage(int& usage)
+bool CPdhGPUUsage::GetGpuUsage(int& usage, const std::wstring& selected_device, std::wstring& resolved_device)
 {
-    if (isInitialized)
+    const auto now = GetTickCount();
+    if (m_adapters.empty() || now - m_last_enumeration >= 5000)
     {
-        std::vector<CounterValueItem> valueItems;
-        if (QueryValues(valueItems))
-        {
-            if (!valueItems.empty())
-            {
-                //获取所有类型的利用率
-                std::map<std::wstring, double> gpu_usage_map;
-                for (const auto& item : valueItems)
-                {
-                    std::wstring item_name = item.name;
-                    size_t index = item.name.rfind(L'_');
-                    if (index != std::wstring::npos)
-                        item_name = item.name.substr(index + 1);
-                    gpu_usage_map[item_name] += item.value;
-                }
-                //查找所有类型中最大的值作为总利用率（同Windows任务管理器的处理）
-                double max_value = 0;
-                for (const auto& item : gpu_usage_map)
-                {
-                    if (item.second > max_value)
-                        max_value = item.second;
-                }
-
-                usage = static_cast<int>(max_value + 0.5);  // 四舍五入
-                usage = min(max(usage, 0), 100);        // 限制在0-100范围
-                return true;
-            }
-        }
+        m_adapters = EnumerateGpuAdapters();
+        m_last_enumeration = now;
     }
-
-    return false;
+    const auto* adapter = SelectGpuAdapter(m_adapters, selected_device);
+    resolved_device = adapter ? adapter->device_id : (selected_device.empty() ? L"unavailable" : selected_device);
+    if (!adapter || !isInitialized) return false;
+    std::vector<CounterValueItem> values;
+    if (!QueryValues(values)) return false;
+    std::vector<GpuSelection::Sample> samples;
+    samples.reserve(values.size());
+    for (const auto& item : values) samples.push_back({item.name, item.value});
+    return GpuSelection::Usage(samples, adapter->luid, usage);
 }

@@ -33,6 +33,7 @@ namespace OpenHardwareMonitorApi {
         virtual void SetGpuEnable(bool enable) override;
         virtual void SetHddEnable(bool enable) override;
         virtual void SetMainboardEnable(bool enable) override;
+        virtual void SetGpuDevice(const std::wstring& device_id) override;
 
     private:
         bool GetHardwareTemperature(IHardware^ hardware, float& temperature);
@@ -57,6 +58,7 @@ namespace OpenHardwareMonitorApi {
         float m_gpu_intel_usage{};
         float m_cpu_freq{};
         float m_cpu_usage{};
+        std::wstring m_selected_gpu_device;
         std::map<std::wstring, float> m_all_hdd_temperature;
         std::map<std::wstring, float> m_all_cpu_temperature;
         std::map<std::wstring, float> m_all_cpu_clock;

@@ -57,6 +57,7 @@ void CGeneralSettingsDlg::SetControlMouseWheelEnable(bool enable)
     m_mbd_temp_tip_edit.SetMouseWheelEnable(enable);
     m_hard_disk_combo.SetMouseWheelEnable(enable);
     m_select_cpu_combo.SetMouseWheelEnable(enable);
+    m_select_gpu_combo.SetMouseWheelEnable(enable);
 }
 
 void CGeneralSettingsDlg::OnSettingsApplied()
@@ -113,6 +114,8 @@ bool CGeneralSettingsDlg::InitializeControls()
     RepositionTextBasedControls({
         { CtrlTextInfo::L1, IDC_SELECT_HDD_STATIC },
         { CtrlTextInfo::C0, IDC_SELECT_HARD_DISK_COMBO },
+        { CtrlTextInfo::L1, IDC_SELECT_GPU_STATIC },
+        { CtrlTextInfo::C0, IDC_SELECT_GPU_COMBO },
         { CtrlTextInfo::L1, IDC_SELECT_CPU_STATIC },
         { CtrlTextInfo::C0, IDC_SELECT_CPU_COMBO },
     });
@@ -185,6 +188,7 @@ void CGeneralSettingsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_MBD_TEMP_TIP_EDIT, m_mbd_temp_tip_edit);
     DDX_Control(pDX, IDC_SELECT_HARD_DISK_COMBO, m_hard_disk_combo);
     DDX_Control(pDX, IDC_SELECT_CPU_COMBO, m_select_cpu_combo);
+    DDX_Control(pDX, IDC_SELECT_GPU_COMBO, m_select_gpu_combo);
     DDX_Control(pDX, IDC_PLUGIN_MANAGE_BUTTON, m_plugin_manager_btn);
     DDX_Control(pDX, IDC_SELECT_CONNECTIONS_BUTTON, m_select_connection_btn);
 }
@@ -230,6 +234,7 @@ BEGIN_MESSAGE_MAP(CGeneralSettingsDlg, CTabDlg)
     ON_BN_CLICKED(IDC_HDD_CHECK, &CGeneralSettingsDlg::OnBnClickedHddCheck)
     ON_BN_CLICKED(IDC_MBD_CHECK, &CGeneralSettingsDlg::OnBnClickedMbdCheck)
     ON_CBN_SELCHANGE(IDC_SELECT_CPU_COMBO, &CGeneralSettingsDlg::OnCbnSelchangeSelectCpuCombo)
+    ON_CBN_SELCHANGE(IDC_SELECT_GPU_COMBO, &CGeneralSettingsDlg::OnCbnSelchangeSelectGpuCombo)
     ON_BN_CLICKED(IDC_PLUGIN_MANAGE_BUTTON, &CGeneralSettingsDlg::OnBnClickedPluginManageButton)
     ON_BN_CLICKED(IDC_SHOW_NOTIFY_ICON_CHECK, &CGeneralSettingsDlg::OnBnClickedShowNotifyIconCheck)
     ON_BN_CLICKED(IDC_SELECT_CONNECTIONS_BUTTON, &CGeneralSettingsDlg::OnBnClickedSelectConnectionsButton)
@@ -394,6 +399,24 @@ BOOL CGeneralSettingsDlg::OnInitDialog()
         m_select_cpu_combo.SetCurSel(cur_index);
     }
 #endif
+
+    // Available even in Lite mode or when GPU hardware sensors are disabled.
+    m_gpu_adapters = EnumerateGpuAdapters();
+    m_select_gpu_combo.AddString(CCommon::LoadText(IDS_GPU_AUTO));
+    int selected_gpu = m_data.gpu_device_id.empty() ? 0 : -1;
+    for (size_t i = 0; i < m_gpu_adapters.size(); ++i)
+    {
+        m_select_gpu_combo.AddString(m_gpu_adapters[i].name.c_str());
+        if (GpuSelection::NormalizeDeviceId(m_gpu_adapters[i].device_id) == GpuSelection::NormalizeDeviceId(m_data.gpu_device_id))
+            selected_gpu = static_cast<int>(i) + 1;
+    }
+    if (selected_gpu < 0)
+    {
+        const auto label = m_data.gpu_device_name + L" (" + CCommon::LoadText(IDS_GPU_UNAVAILABLE).GetString() + L")";
+        selected_gpu = m_select_gpu_combo.AddString(label.c_str());
+    }
+    m_select_gpu_combo.SetCurSel(selected_gpu);
+    m_select_gpu_combo.SetDroppedWidth(theApp.DPI(400));
 
     //不含温度监控的版本，禁用温度相关的控件
 #ifdef WITHOUT_TEMPERATURE
@@ -811,4 +834,19 @@ void CGeneralSettingsDlg::OnBnClickedResetAutoRunButton()
 void CGeneralSettingsDlg::OnEnChangeMonitorSpanEdit()
 {
     m_data.monitor_time_span = m_monitor_span_edit.GetValue();
+}
+
+void CGeneralSettingsDlg::OnCbnSelchangeSelectGpuCombo()
+{
+    const auto index = m_select_gpu_combo.GetCurSel();
+    if (index == 0)
+    {
+        m_data.gpu_device_id.clear();
+        m_data.gpu_device_name.clear();
+    }
+    else if (index > 0 && static_cast<size_t>(index - 1) < m_gpu_adapters.size())
+    {
+        m_data.gpu_device_id = m_gpu_adapters[index - 1].device_id;
+        m_data.gpu_device_name = m_gpu_adapters[index - 1].name;
+    }
 }

@@ -84,6 +84,8 @@ void CTrafficMonitorApp::LoadConfig()
     m_general_data.monitor_time_span = ini.GetInt(L"general", L"monitor_time_span", 1000);
     if (m_general_data.monitor_time_span < MONITOR_TIME_SPAN_MIN || m_general_data.monitor_time_span > MONITOR_TIME_SPAN_MAX)
         m_general_data.monitor_time_span = 1000;
+    m_general_data.gpu_device_id = ini.GetString(L"general", L"gpu_device_id", L"");
+    m_general_data.gpu_device_name = ini.GetString(L"general", L"gpu_device_name", L"");
     m_general_data.hard_disk_name = ini.GetString(L"general", L"hard_disk_name", L"");
     m_general_data.cpu_core_name = ini.GetString(L"general", L"cpu_core_name", L"Core Average");
     m_general_data.hardware_monitor_item = ini.GetInt(L"general", L"hardware_monitor_item", 0);
@@ -308,6 +310,8 @@ void CTrafficMonitorApp::SaveConfig()
     ini.WriteBool(L"general", L"show_all_interface", m_general_data.show_all_interface);
     ini.WriteInt(L"general", L"cpu_usage_acquire_method", m_general_data.cpu_usage_acquire_method);
     ini.WriteInt(L"general", L"monitor_time_span", m_general_data.monitor_time_span);
+    ini.WriteString(L"general", L"gpu_device_id", m_general_data.gpu_device_id);
+    ini.WriteString(L"general", L"gpu_device_name", m_general_data.gpu_device_name);
     ini.WriteString(L"general", L"hard_disk_name", m_general_data.hard_disk_name);
     ini.WriteString(L"general", L"cpu_core_name", m_general_data.cpu_core_name);
     ini.WriteInt(L"general", L"hardware_monitor_item", m_general_data.hardware_monitor_item);

@@ -2,6 +2,7 @@
 #include "TabDlg.h"
 #include "SpinEdit.h"
 #include "ComboBox2.h"
+#include "PdhHardwareQuery/GpuAdapters.h"
 
 // CGeneralSettingsDlg dialog
 
@@ -50,6 +51,8 @@ protected:
     CSpinEdit m_mbd_temp_tip_edit;
     CComboBox2 m_hard_disk_combo;
     CComboBox2 m_select_cpu_combo;
+    CComboBox2 m_select_gpu_combo;
+    std::vector<GpuAdapter> m_gpu_adapters;
     CButton m_plugin_manager_btn;
     CButton m_select_connection_btn;
 
@@ -100,6 +103,7 @@ public:
     afx_msg void OnBnClickedHddCheck();
     afx_msg void OnBnClickedMbdCheck();
     afx_msg void OnCbnSelchangeSelectCpuCombo();
+    afx_msg void OnCbnSelchangeSelectGpuCombo();
     afx_msg void OnBnClickedPluginManageButton();
     afx_msg void OnBnClickedShowNotifyIconCheck();
     afx_msg void OnBnClickedSelectConnectionsButton();

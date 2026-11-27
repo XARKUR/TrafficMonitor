@@ -4,6 +4,7 @@
 
 #include "OpenHardwareMonitorImp.h"
 #include <vector>
+#include "GpuSelection.h"
 
 namespace OpenHardwareMonitorApi
 {
@@ -238,26 +239,33 @@ namespace OpenHardwareMonitorApi
 
     bool COpenHardwareMonitor::GetGpuUsage(IHardware^ hardware, float& gpu_usage)
     {
-        float usage_max = 0;
+        float usage_max = -1;
         for (int i = 0; i < hardware->Sensors->Length; i++)
         {
             //找到负载
             if (hardware->Sensors[i]->SensorType == SensorType::Load)
             {
+                if (!hardware->Sensors[i]->Value.HasValue) continue;
                 float cur_gpu_usage = Convert::ToDouble(hardware->Sensors[i]->Value);
+                if (!std::isfinite(cur_gpu_usage) || cur_gpu_usage < 0 || cur_gpu_usage > 100) continue;
                 if (hardware->Sensors[i]->Name == L"GPU Core")
                 {
                     gpu_usage = cur_gpu_usage;
                     return true;
                 }
 
-                //计算最大值
-                if (cur_gpu_usage > usage_max)
+                // Only GPU engines are busy-time metrics; memory/controller load is different.
+                if (hardware->Sensors[i]->Name->StartsWith(L"D3D ") && cur_gpu_usage > usage_max)
                     usage_max = cur_gpu_usage;
             }
         }
         gpu_usage = usage_max;
-        return true;
+        return usage_max >= 0;
+    }
+
+    void COpenHardwareMonitor::SetGpuDevice(const std::wstring& device_id)
+    {
+        m_selected_gpu_device = GpuSelection::NormalizeDeviceId(device_id);
     }
 
     bool COpenHardwareMonitor::GetHddUsage(IHardware^ hardware, float& hdd_usage)
@@ -341,6 +349,14 @@ namespace OpenHardwareMonitorApi
             computer->Accept(MonitorGlobal::Instance()->updateVisitor);
             for (int i = 0; i < computer->Hardware->Count; i++)
             {
+                const auto type = computer->Hardware[i]->HardwareType;
+                if (type == HardwareType::GpuAmd || type == HardwareType::GpuNvidia || type == HardwareType::GpuIntel)
+                {
+                    auto gpu = dynamic_cast<LibreHardwareMonitor::Hardware::Gpu::GenericGpu^>(computer->Hardware[i]);
+                    if (!m_selected_gpu_device.empty() && (gpu == nullptr ||
+                        GpuSelection::NormalizeDeviceId(ClrStringToStdWstring(gpu->DeviceId)) != m_selected_gpu_device))
+                        continue;
+                }
                 //查找硬件类型
                 switch (computer->Hardware[i]->HardwareType)
                 {
