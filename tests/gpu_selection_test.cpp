@@ -36,6 +36,25 @@ int main()
     assert(!ParseEngine(L"luid_0x1_0x1_phys_-1_eng_0_engtype_3D",engine));
     assert(!ParseEngine(L"luid_0x1_0x1_phys_0_eng_0_engtype_",engine));
 
+    uint64_t memory = 123;
+    const std::wstring d = L"luid_0x00000000_0x00000001_phys_0";
+    const std::wstring i = L"luid_0x00000000_0x00000002_phys_0";
+    assert(DedicatedMemory({{d, 24.0 * 1024 * 1024 * 1024}, {i, 385.0 * 1024 * 1024}}, {0,1}, memory));
+    assert(memory == 24ull * 1024 * 1024 * 1024);
+    assert(DedicatedMemory({{d,0}}, {0,1}, memory) && memory == 0);
+    assert(!DedicatedMemory({{i,100}}, {0,1}, memory));
+    assert(!DedicatedMemory({}, {0,1}, memory));
+    assert(!DedicatedMemory({{L"pid_4_" + d,100}, {L"_Total",100}, {d+L"_bad",100}}, {0,1}, memory));
+    assert(!DedicatedMemory({{d,-1}}, {0,1}, memory));
+    assert(!DedicatedMemory({{d,std::numeric_limits<double>::infinity()}}, {0,1}, memory));
+    assert(!DedicatedMemory({{d,std::numeric_limits<double>::quiet_NaN()}}, {0,1}, memory));
+    assert(!DedicatedMemory({{d,9223372036854775808.0}}, {0,1}, memory));
+    assert(DedicatedMemory({{d,100}, {d,100}}, {0,1}, memory) && memory == 100);
+    assert(!DedicatedMemory({{d,100}, {d,200}}, {0,1}, memory));
+    assert(DedicatedMemory({{d,100}, {L"luid_0x0_0x1_phys_1",200}}, {0,1}, memory) && memory == 300);
+    assert(!DedicatedMemory({{L"luid_0x100000000_0x1_phys_0",100}}, {0,1}, memory));
+    assert(!DedicatedMemory({{L"luid_0x0_0x1_phys_-1",100}}, {0,1}, memory));
+
     const std::wstring id = L"PCI\\VEN_1234&DEV_ABCD\\4&AAAA&0&0000";
     assert(NormalizeDeviceId(id) == NormalizeDeviceId(L"\\\\?\\pci#ven_1234&dev_abcd#4&aaaa&0&0000#{1234-5678}"));
     std::vector<GpuAdapter> adapters = {
@@ -51,5 +70,5 @@ int main()
     adapters[1].luid={0,9}; // A reboot changed its LUID and enumeration index.
     assert(SelectGpuAdapter(adapters,id)->luid.low == 9);
     assert(!SelectGpuAdapter({},L""));
-    std::cout << "GPU selection and physical-engine aggregation regression tests passed.\n";
+    std::cout << "GPU selection, physical-engine aggregation and dedicated memory regression tests passed.\n";
 }

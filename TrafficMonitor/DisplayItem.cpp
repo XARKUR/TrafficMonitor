@@ -18,6 +18,11 @@ CommonDisplayItem::CommonDisplayItem(IPluginItem* item)
 
 bool CommonDisplayItem::operator<(const CommonDisplayItem& item) const
 {
+    // Append the new item after legacy built-ins AND plugins. Persisted orders
+    // and color arrays use this sequence, so inserting before plugins shifts them.
+    const bool appended = !is_plugin && item_type == TDI_GPU_MEMORY;
+    const bool other_appended = !item.is_plugin && item.item_type == TDI_GPU_MEMORY;
+    if (appended != other_appended) return !appended;
     if (is_plugin && !item.is_plugin)
         return false;
     else if (!is_plugin && item.is_plugin)
@@ -72,6 +77,7 @@ CString CommonDisplayItem::GetItemName() const
         case TDI_CPU: return CCommon::LoadText(IDS_CPU_USAGE);
         case TDI_MEMORY: return CCommon::LoadText(IDS_MEMORY_USAGE);
         case TDI_GPU_USAGE: return CCommon::LoadText(IDS_GPU_USAGE);
+        case TDI_GPU_MEMORY: return CCommon::LoadText(IDS_GPU_MEMORY);
         case TDI_CPU_TEMP: return CCommon::LoadText(IDS_CPU_TEMPERATURE);
         case TDI_GPU_TEMP: return CCommon::LoadText(IDS_GPU_TEMPERATURE);
         case TDI_HDD_TEMP: return CCommon::LoadText(IDS_HDD_TEMPERATURE);
@@ -129,6 +135,9 @@ std::wstring CommonDisplayItem::DefaultString(bool is_main_window) const
         case TDI_MEMORY:
             default_text = CCommon::LoadText(IDS_MEMORY_DISP, _T(": "));
             break;
+        case TDI_GPU_MEMORY:
+            default_text = CCommon::LoadText(IDS_GPU_MEMORY_DISP, _T(": "));
+            break;
         case TDI_GPU_USAGE:
             default_text = CCommon::LoadText(IDS_GPU_DISP, _T(": "));
             break;
@@ -168,6 +177,7 @@ const wchar_t* CommonDisplayItem::GetItemIniKeyName() const
         case TDI_CPU: return L"cpu_string";
         case TDI_MEMORY: return L"memory_string";
         case TDI_GPU_USAGE: return L"gpu_string";
+        case TDI_GPU_MEMORY: return L"gpu_memory_string";
         case TDI_CPU_TEMP: return L"cpu_temp_string";
         case TDI_GPU_TEMP: return L"gpu_temp_string";
         case TDI_HDD_TEMP: return L"hdd_temp_string";
@@ -240,6 +250,10 @@ CString CommonDisplayItem::GetItemValueText(bool is_main_window) const
         case TDI_GPU_USAGE:
             str_value = CCommon::UsageToString(theApp.m_gpu_usage, *cfg_data);
             break;
+        case TDI_GPU_MEMORY:
+            str_value = theApp.m_gpu_memory_used < 0 ? CString(_T("--")) :
+                CCommon::DataSizeToString(static_cast<uint64_t>(theApp.m_gpu_memory_used), cfg_data->separate_value_unit_with_space);
+            break;
         //硬盘利用率
         case TDI_HDD_USAGE:
             str_value = CCommon::UsageToString(theApp.m_hdd_usage, *cfg_data);
@@ -308,6 +322,9 @@ CString CommonDisplayItem::GetItemValueSampleText(bool is_main_window) const
         case TDI_CPU_TEMP: case TDI_GPU_TEMP: case TDI_HDD_TEMP: case TDI_MAIN_BOARD_TEMP:
             sample_str = _T("40 °C");
             break;
+        case TDI_GPU_MEMORY:
+            sample_str = _T("12.34 GB");
+            break;
         case TDI_CPU_FREQ:
             sample_str = _T("1.0 GHz");
             break;
@@ -374,6 +391,10 @@ CString CommonDisplayItem::GetItemValueSampleText(bool is_main_window) const
                 }
             }
         }
+            break;
+        case TDI_GPU_MEMORY:
+            // Reserve enough width for values just below unit boundaries (1023.99 MB).
+            sample_str = theApp.m_taskbar_data.separate_value_unit_with_space ? _T("1023.99 MB") : _T("1023.99MB");
             break;
         //温度
         case TDI_CPU_TEMP:

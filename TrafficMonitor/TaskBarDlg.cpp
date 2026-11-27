@@ -301,7 +301,7 @@ void CTaskBarDlg::DrawDisplayItem(IDrawCommon& drawer, DisplayItem type, CRect r
     }
 
     // 绘制状态条
-    if (type == TDI_CPU || type == TDI_MEMORY || type == TDI_GPU_USAGE || type == TDI_CPU_TEMP
+    if (type == TDI_CPU || type == TDI_MEMORY || type == TDI_GPU_USAGE || type == TDI_GPU_MEMORY || type == TDI_CPU_TEMP
         || type == TDI_GPU_TEMP || type == TDI_HDD_TEMP || type == TDI_MAIN_BOARD_TEMP || type == TDI_HDD_USAGE
         || type == TDI_UP || type == TDI_DOWN || type == TDI_TOTAL_SPEED/* ||type==TDI_CPU_FREQ*/)
     {
@@ -313,6 +313,10 @@ void CTaskBarDlg::DrawDisplayItem(IDrawCommon& drawer, DisplayItem type, CRect r
             break;
         case TDI_MEMORY:
             figure_value = theApp.m_memory_usage;
+            break;
+        case TDI_GPU_MEMORY:
+            figure_value = (theApp.m_gpu_memory_used < 0 || theApp.m_gpu_memory_total == 0) ? -1 :
+                static_cast<int>((std::min)(100.0, 100.0 * theApp.m_gpu_memory_used / theApp.m_gpu_memory_total));
             break;
         case TDI_GPU_USAGE:
             figure_value = theApp.m_gpu_usage;
@@ -748,6 +752,11 @@ CString CTaskBarDlg::GetMouseTipsInfo()
         tip_info += temp;
     }
 
+    if (!IsItemShow(TDI_GPU_MEMORY) && theApp.m_gpu_memory_used >= 0)
+    {
+        temp.Format(_T("\r\n%s: %s"), CCommon::LoadText(IDS_GPU_MEMORY), CommonDisplayItem(TDI_GPU_MEMORY).GetItemValueText(false));
+        tip_info += temp;
+    }
     if (!IsItemShow(TDI_GPU_USAGE) && theApp.m_gpu_usage >= 0)
     {
         temp.Format(_T("\r\n%s: %d %%"), CCommon::LoadText(IDS_GPU_USAGE), theApp.m_gpu_usage);

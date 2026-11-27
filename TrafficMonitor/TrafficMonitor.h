@@ -8,6 +8,7 @@
 #error "在包含此文件之前包含“stdafx.h”以生成 PCH 文件"
 #endif
 
+#include <cstdint>
 #include "resource.h"       // 主符号
 #include "Common.h"
 #include "WinVersionHelper.h"
@@ -56,6 +57,8 @@ public:
     float m_gpu_temperature{ -1 };  //显卡温度
     float m_hdd_temperature{ -1 };  //硬盘温度
     float m_main_board_temperature{ -1 };    //主板温度
+    __int64 m_gpu_memory_used{ -1 }; // Dedicated GPU memory in bytes; -1 means unavailable.
+    uint64_t m_gpu_memory_total{};
     int m_gpu_usage{ -1 };      //显卡利用率
     int m_hdd_usage{ -1 };      //硬盘利用率
 

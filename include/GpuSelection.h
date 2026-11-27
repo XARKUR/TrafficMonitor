@@ -71,6 +71,39 @@ namespace GpuSelection
 
     struct Sample { std::wstring name; double value; };
 
+    // Adapter-level counters only: process counters may count shared allocations twice.
+    inline bool DedicatedMemory(const std::vector<Sample>& samples, const Luid& selected, uint64_t& bytes)
+    {
+        std::map<uint32_t, uint64_t> physical_adapters;
+        for (const auto& sample : samples)
+        {
+            if (sample.name.compare(0, 7, L"luid_0x") != 0) continue;
+            size_t at = 7;
+            Luid adapter;
+            uint32_t physical;
+            const auto name = sample.name + L"_end";
+            if (!ReadNumber(name, at, L"_0x", 16, adapter.high) ||
+                !ReadNumber(name, at, L"_phys_", 16, adapter.low) ||
+                !ReadNumber(name, at, L"_end", 10, physical) || at != name.size() ||
+                !(adapter == selected)) continue;
+            if (!std::isfinite(sample.value) || sample.value < 0 || sample.value >= 9223372036854775808.0)
+                return false;
+            const auto value = static_cast<uint64_t>(sample.value);
+            const auto inserted = physical_adapters.emplace(physical, value);
+            if (!inserted.second && inserted.first->second != value) return false;
+        }
+        if (physical_adapters.empty()) return false; // Missing is not zero usage.
+        uint64_t total = 0;
+        for (const auto& physical : physical_adapters)
+        {
+            if (physical.second > static_cast<uint64_t>((std::numeric_limits<int64_t>::max)()) - total)
+                return false;
+            total += physical.second;
+        }
+        bytes = total;
+        return true;
+    }
+
     inline bool Usage(const std::vector<Sample>& samples, const Luid& selected, int& usage)
     {
         std::map<std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>, double> engines;

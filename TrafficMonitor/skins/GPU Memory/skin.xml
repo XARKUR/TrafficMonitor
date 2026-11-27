@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <skin>
+    <text_color>16777215</text_color>
+    <specify_each_item_color>0</specify_each_item_color>
+    <skin_author>TrafficMonitor contributors</skin_author>
+    <font name="Segoe UI" size="10" style="0"/>
+  </skin>
+  <layout text_height="22" no_label="0">
+    <layout_l width="240" height="152">
+      <gpu x="12" y="8" width="216" align="3" show="1"/>
+      <gpu_memory x="12" y="32" width="216" align="3" show="1"/>
+      <cpu x="12" y="56" width="216" align="3" show="1"/>
+      <memory x="12" y="80" width="216" align="3" show="1"/>
+      <up x="12" y="104" width="216" align="3" show="1"/>
+      <down x="12" y="128" width="216" align="3" show="1"/>
+    </layout_l>
+    <layout_s width="240" height="56">
+      <gpu x="12" y="8" width="216" align="3" show="1"/>
+      <gpu_memory x="12" y="32" width="216" align="3" show="1"/>
+    </layout_s>
+  </layout>
+  <preview width="240" height="216"><l x="0" y="0"/><s x="0" y="160"/></preview>
+</root>

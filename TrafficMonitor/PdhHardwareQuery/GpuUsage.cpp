@@ -8,6 +8,13 @@ CPdhGPUUsage::CPdhGPUUsage()
 
 CPdhGPUUsage::~CPdhGPUUsage() = default;
 
+bool CPdhGPUUsage::GetGpuMemory(const std::wstring& resolved_device, uint64_t& used, uint64_t& total)
+{
+    const auto* adapter = SelectGpuAdapter(m_adapters, resolved_device);
+    total = adapter ? adapter->dedicated_memory : 0;
+    return adapter && m_memory_query.Read(adapter->luid, used);
+}
+
 bool CPdhGPUUsage::GetGpuUsage(int& usage, const std::wstring& selected_device, std::wstring& resolved_device)
 {
     const auto now = GetTickCount();

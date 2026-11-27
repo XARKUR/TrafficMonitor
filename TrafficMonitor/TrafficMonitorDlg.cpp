@@ -177,6 +177,11 @@ CString CTrafficMonitorDlg::GetMouseTipsInfo()
         temp.Format(_T("\r\n%s: %s"), CCommon::LoadText(IDS_CPU_FREQ), CCommon::FreqToString(theApp.m_cpu_freq, theApp.m_main_wnd_data));
         tip_info += temp;
     }
+    if (!skin_layout.GetItem(TDI_GPU_MEMORY).show && theApp.m_gpu_memory_used >= 0)
+    {
+        temp.Format(_T("\r\n%s: %s"), CCommon::LoadText(IDS_GPU_MEMORY), CommonDisplayItem(TDI_GPU_MEMORY).GetItemValueText(true));
+        tip_info += temp;
+    }
     if (!skin_layout.GetItem(TDI_GPU_USAGE).show && theApp.m_gpu_usage >= 0)
     {
         temp.Format(_T("\r\n%s: %d %%"), CCommon::LoadText(IDS_GPU_USAGE), theApp.m_gpu_usage);
@@ -1384,6 +1389,10 @@ void CTrafficMonitorDlg::DoMonitorAcquisition()
     theApp.m_gpu_usage = -1;
     if (m_gpu_usage_helper.GetGpuUsage(theApp.m_gpu_usage, selected_gpu_device, resolved_gpu_device))
         gpu_usage_acquired = true;
+    uint64_t gpu_memory_used = 0;
+    theApp.m_gpu_memory_used = -1; // Never leave the previous card's sample on screen.
+    if (m_gpu_usage_helper.GetGpuMemory(resolved_gpu_device, gpu_memory_used, theApp.m_gpu_memory_total))
+        theApp.m_gpu_memory_used = static_cast<__int64>(gpu_memory_used);
 
     //获取硬盘利用率
     if (lite_version /*|| is_arm64ec*/ || !theApp.m_general_data.IsHardwareEnable(HI_HDD))
