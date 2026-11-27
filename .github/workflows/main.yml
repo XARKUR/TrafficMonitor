@@ -24,7 +24,7 @@ jobs:
       - name: Build Windows application
         shell: pwsh
         run: |
-          msbuild TrafficMonitor.sln /t:TrafficMonitor /m /p:Configuration="${{ matrix.configuration }}" /p:Platform=x64 /p:PlatformToolset=v143 /verbosity:minimal /fileLogger /fileLoggerParameters:LogFile=windows-build.log
+          msbuild TrafficMonitor.sln /m /p:Configuration="${{ matrix.configuration }}" /p:Platform=x64 /p:PlatformToolset=v143 /verbosity:minimal /fileLogger /fileLoggerParameters:LogFile=windows-build.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Package test application
         shell: pwsh
